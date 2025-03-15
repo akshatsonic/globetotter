@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,7 +26,7 @@ public class SessionService {
         if(session.isEmpty() || !session.get().getIsActive()){
             return null;
         }
-        else if (session.get().getExpiryTime()<System.currentTimeMillis()){
+        else if (session.get().getExpiryTime().isBefore(LocalDateTime.now())){
             session.get().setIsActive(false);
             sessionRepository.save(session.get());
             return null;
@@ -41,15 +42,17 @@ public class SessionService {
     public Session createSession(User user){
         Session session = getValidSession(user.getId());
         if(session==null){
-            return Session.builder()
+            Session newSession =  Session.builder()
                     .sessionToken(UUID.randomUUID().toString())
                     .user(user)
-                    .expiryTime(System.currentTimeMillis()+sessionExpiryTime)
+                    .expiryTime(LocalDateTime.now().plusSeconds(sessionExpiryTime/1000))
                     .isActive(true)
                     .build();
+            sessionRepository.save(newSession);
+            return newSession;
         }
         else{
-            session.setExpiryTime(System.currentTimeMillis()+sessionExpiryTime);
+            session.setExpiryTime(LocalDateTime.now().plusSeconds(sessionExpiryTime/1000));
             sessionRepository.save(session);
             return session;
         }

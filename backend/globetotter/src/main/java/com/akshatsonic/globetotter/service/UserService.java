@@ -30,8 +30,9 @@ public class UserService {
             throw new UserAlreadyPresentException("User already present with username: "+createUserRequest.getUsername());
         }
         catch (UserNotFoundException e){
-            User user = new User();
-            user.setUsername(createUserRequest.getUsername());
+            User user = User.builder()
+                    .username(createUserRequest.getUsername())
+                    .build();
             userRepository.save(user);
             return user;
         }

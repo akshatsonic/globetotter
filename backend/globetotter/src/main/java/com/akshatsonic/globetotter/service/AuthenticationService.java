@@ -3,6 +3,8 @@ package com.akshatsonic.globetotter.service;
 import com.akshatsonic.globetotter.dto.CreateUserRequest;
 import com.akshatsonic.globetotter.dto.LoginRequest;
 import com.akshatsonic.globetotter.dto.LogoutRequest;
+import com.akshatsonic.globetotter.dto.SessionResponseDto;
+import com.akshatsonic.globetotter.exceptions.InvalidPasswordException;
 import com.akshatsonic.globetotter.exceptions.UserAlreadyPresentException;
 import com.akshatsonic.globetotter.exceptions.UserNotFoundException;
 import com.akshatsonic.globetotter.models.Session;
@@ -28,16 +30,19 @@ public class AuthenticationService {
     private final SessionService sessionService;
     private final AuthRepository authRepository;
 
-    public Session authenticate(LoginRequest loginRequest){
+    public SessionResponseDto authenticate(LoginRequest loginRequest){
         String username = loginRequest.getUsername();
         String password = loginRequest.getPassword();
         User user = userService.getUser(username);
         String encryptedPassword = encrypt(password);
         Optional<AuthEntity> authEntity = authRepository.findByUserAndPassword(user, encryptedPassword);
         if (authEntity.isEmpty()){
-            throw new RuntimeException("Invalid password");
+            throw new InvalidPasswordException("Invalid password");
         }
-        return sessionService.createSession(user);
+        Session session = sessionService.createSession(user);
+        return SessionResponseDto.builder()
+                .sessionToken(session.getSessionToken())
+                .build();
     }
 
     @Transactional

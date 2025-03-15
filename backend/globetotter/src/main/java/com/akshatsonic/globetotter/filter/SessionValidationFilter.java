@@ -13,6 +13,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+import static com.akshatsonic.globetotter.Constants.SESSION_TOKEN_HEADER;
+import static com.akshatsonic.globetotter.Constants.USER_ID_HEADER;
+
 @Component
 @RequiredArgsConstructor
 public class SessionValidationFilter implements Filter {
@@ -22,13 +25,14 @@ public class SessionValidationFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
-        String sessionToken = httpRequest.getHeader("session-token");
-        Long userId = Long.parseLong(httpRequest.getHeader("user-id"));
         String uri = httpRequest.getRequestURI();
-        if(uri.equals("/auth/user") || uri.equals("/auth/login")){
+        if(uri.equals("/auth/user") || uri.equals("/auth/login") || uri.equals("/ping")){
             chain.doFilter(request, response);
             return;
         }
+        String sessionToken = httpRequest.getHeader(SESSION_TOKEN_HEADER);
+        Long userId = Long.parseLong(httpRequest.getHeader(USER_ID_HEADER));
+
         if (sessionToken == null || userId == null ) {
             ((HttpServletResponse) response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Session token or User id not found in request");
             return;

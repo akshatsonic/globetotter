@@ -5,7 +5,6 @@ import lombok.Data;
 
 @Data
 @Builder
-public class LogoutRequest {
+public class SessionResponseDto {
     private String sessionToken;
-    private Long userId;
 }
